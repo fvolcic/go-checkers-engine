@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 
 	gocheckers "github.com/fvolcic/gocheckers"
 )
 
 const (
-	depth = 8
+	depth = 6
 )
 
 var searchedCount int
@@ -16,35 +17,38 @@ func findBestMove(board *gocheckers.CheckersBoard, blackPlayer bool) []int {
 
 	moves := board.GenerateMoves()
 
-	if len(moves) == 1 {
-		return moves[0]
+	moveValues := make([]int, len(moves))
+	var moveValueChannels []chan int
+
+	for i := 0; i < len(moves); i++ {
+		moveValueChannels = append(moveValueChannels, make(chan int))
 	}
 
-	searchedCount = 0
-
-	bestMove := moves[0]
-	bestValue := minimax(board, depth, blackPlayer)
-
-	for i := 1; i < len(moves); i++ {
+	for i := 0; i < len(moves); i++ {
 		boardCopy := board.GenerateDeepCopy()
 		boardCopy.MakeMove(moves[i])
+		go minimax(boardCopy, depth, blackPlayer, moveValueChannels[i])
+	}
 
-		value := minimax(boardCopy, depth, blackPlayer)
+	for i := 0; i < len(moves); i++ {
+		moveValues[i] = <-moveValueChannels[i]
+	}
 
-		if blackPlayer {
-			if value > bestValue {
-				bestValue = value
-				bestMove = moves[i]
-			}
-		} else {
-			if value < bestValue {
-				bestValue = value
-				bestMove = moves[i]
-			}
+	bestMoveIndex := 0
+	bestMoveValue := -1000000
+
+	for i := 0; i < len(moves); i++ {
+		if moveValues[i] > bestMoveValue {
+			bestMoveValue = moveValues[i]
+			bestMoveIndex = i
 		}
 	}
-	fmt.Printf("Searched %d positions\n", searchedCount)
-	return bestMove
+
+	fmt.Println("Searched count: ", searchedCount)
+	searchedCount = 0
+
+	return moves[bestMoveIndex]
+
 }
 
 func evaluate(board *gocheckers.CheckersBoard) int {
@@ -80,7 +84,7 @@ func evaluate(board *gocheckers.CheckersBoard) int {
 	return eval
 }
 
-func minimax(board *gocheckers.CheckersBoard, depth int, maximizingPlayer bool) int {
+func minimax(board *gocheckers.CheckersBoard, depth int, maximizingPlayer bool, valueCh chan int) int {
 
 	searchedCount++
 
@@ -95,8 +99,12 @@ func minimax(board *gocheckers.CheckersBoard, depth int, maximizingPlayer bool) 
 		for i := 0; i < len(moves); i++ {
 			board.MakeMove(moves[i])
 			boardCopy := board.GenerateDeepCopy()
-			value := minimax(boardCopy, depth-1, false)
+			value := minimax(boardCopy, depth-1, false, nil)
 			bestValue = max(bestValue, value)
+		}
+
+		if valueCh != nil {
+			valueCh <- bestValue
 		}
 
 		return bestValue
@@ -107,8 +115,12 @@ func minimax(board *gocheckers.CheckersBoard, depth int, maximizingPlayer bool) 
 		for i := 0; i < len(moves); i++ {
 			board.MakeMove(moves[i])
 			boardCopy := board.GenerateDeepCopy()
-			value := minimax(boardCopy, depth-1, true)
+			value := minimax(boardCopy, depth-1, true, nil)
 			bestValue = min(bestValue, value)
+		}
+
+		if valueCh != nil {
+			valueCh <- bestValue
 		}
 
 		return bestValue
@@ -161,7 +173,9 @@ func main() {
 
 		var move int
 
-		fmt.Scan(&move)
+		//fmt.Scan(&move)
+
+		move = rand.Intn(len(moves))
 
 		success := board.MakeMove(moves[move])
 
