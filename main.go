@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 
 	gocheckers "github.com/fvolcic/gocheckers"
 )
 
 const (
-	depth = 8
+	depth = 6
 )
 
 var searchedCount int
@@ -24,6 +25,8 @@ func findBestMove(board *gocheckers.CheckersBoard, blackPlayer bool) []int {
 
 	bestMove := moves[0]
 	bestValue := minimax(board, depth, blackPlayer)
+
+	fmt.Printf("Move: %v, Value: %d\n", bestMove, bestValue)
 
 	for i := 1; i < len(moves); i++ {
 		boardCopy := board.GenerateDeepCopy()
@@ -48,7 +51,7 @@ func findBestMove(board *gocheckers.CheckersBoard, blackPlayer bool) []int {
 }
 
 func evaluate(board *gocheckers.CheckersBoard) int {
-	raw := board.GetUnpaddedBoard()
+	raw := board.GetBoardData()
 
 	eval := 0
 
@@ -61,14 +64,14 @@ func evaluate(board *gocheckers.CheckersBoard) int {
 	for row := 0; row < len(raw); row++ {
 		for col := 0; col < len(raw[row]); col++ {
 			switch raw[row][col] {
-			case 1:
+			case gocheckers.Black:
 				blackPieceCount++
-			case 2:
+			case gocheckers.White:
 				whitePieceCount++
-			case 3:
+			case gocheckers.BlackKing:
 				blackKingCount++
 				blackPieceCount++
-			case 4:
+			case gocheckers.WhiteKing:
 				whiteKingCount++
 				whitePieceCount++
 			}
@@ -148,6 +151,13 @@ func main() {
 
 		fmt.Println(board.ToString())
 
+		whiteCount := board.GetPieceCount(gocheckers.White) + board.GetPieceCount(gocheckers.WhiteKing)
+		blackCount := board.GetPieceCount(gocheckers.Black) + board.GetPieceCount(gocheckers.BlackKing)
+
+		fmt.Println("White: ", whiteCount)
+		fmt.Println("Black: ", blackCount)
+		fmt.Println()
+
 		fmt.Println("   32     31    30     29")
 		fmt.Println("28     27    26    25")
 		fmt.Println("   24     23    22     21")
@@ -161,7 +171,9 @@ func main() {
 
 		var move int
 
-		fmt.Scan(&move)
+		//fmt.Scan(&move)
+
+		move = rand.Intn(len(moves))
 
 		success := board.MakeMove(moves[move])
 
