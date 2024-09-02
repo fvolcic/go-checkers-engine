@@ -3,13 +3,12 @@ package main
 import (
 	"fmt"
 	"math"
-	"math/rand"
 
 	gocheckers "github.com/fvolcic/gocheckers"
 )
 
 const (
-	Depth = 10
+	Depth = 11
 )
 
 var alpha int = math.MaxInt // The best score that the minimizing player can guarantee
@@ -189,8 +188,8 @@ func main() {
 			fmt.Println("\nEnter your move: ")
 
 			var move int
-			//fmt.Scan(&move)
-			move = rand.Intn(len(moves))
+			fmt.Scan(&move)
+			//move = rand.Intn(len(moves))
 
 			board.MakeMove(moves[move])
 
