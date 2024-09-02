@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 
 	gocheckers "github.com/fvolcic/gocheckers"
 )
@@ -118,7 +117,7 @@ func minimax(board *gocheckers.CheckersBoard, depth int, maximizingPlayer bool) 
 	}
 }
 
-func main() {
+func main2() {
 
 	board := gocheckers.NewCheckersBoard()
 	for {
@@ -171,9 +170,9 @@ func main() {
 
 		var move int
 
-		//fmt.Scan(&move)
+		fmt.Scan(&move)
 
-		move = rand.Intn(len(moves))
+		//move = rand.Intn(len(moves))
 
 		success := board.MakeMove(moves[move])
 
